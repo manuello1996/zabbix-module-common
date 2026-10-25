@@ -196,6 +196,9 @@ extract it under Zabbix's `modules/`, scan the directory and enable the module.
 Release tools, developer fixtures, Git metadata and local configuration are
 excluded from deployment ZIPs. Module templates, Agent 2 configuration and images
 are included when present and tracked or unignored in the module repository.
+Tests, development directories, mocks, fixtures, caches and local environment/log
+files are excluded even when nested inside runtime directories. GitHub's source
+archives also honor the repositories' `export-ignore` rules for developer data.
 
 To put this new local common repository on GitHub, create an empty
 `zabbix-module-common` repository in the intended account, add its URL as `origin`,

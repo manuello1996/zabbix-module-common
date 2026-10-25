@@ -40,6 +40,8 @@ GENERATED = {
 }
 RUNTIME_DIRS = {"actions", "assets", "includes", "views", "templates", "agent2", "img"}
 RUNTIME_FILES = {"manifest.json", "Module.php", "README.md", "common.lock.json", "LICENSE", "COPYING"}
+DEVELOPMENT_PARTS = {"dev", "test", "tests", "mock", "mocks", "fixtures", "__pycache__", "node_modules",
+                     ".git", ".github", ".idea", ".vscode", ".tools", "dist"}
 
 
 class ReleaseError(Exception):
@@ -167,6 +169,10 @@ def package(root, manifest):
     files = []
     for name in sorted(names):
         path = Path(name)
+        if any(part.lower() in DEVELOPMENT_PARTS for part in path.parts):
+            continue
+        if path.name.lower().startswith(".env") or path.suffix.lower() in {".pyc", ".pyo", ".log"}:
+            continue
         runtime = (path.parts[0] in RUNTIME_DIRS or name in RUNTIME_FILES
                    or (len(path.parts) == 1 and path.suffix.lower() in {".yaml", ".yml"}))
         if runtime:

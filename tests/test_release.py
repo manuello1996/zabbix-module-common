@@ -78,9 +78,12 @@ class ReleaseIntegrationTests(unittest.TestCase):
 
     def test_preview_is_standalone_and_does_not_commit_or_push(self):
         before = self.git(self.module, "rev-parse", "HEAD")
-        for name in ["dev/secret.txt", "tests/check.py", ".env"]:
+        excluded = ["dev/secret.txt", "tests/check.py", ".env", "assets/js/tests/fixture.js",
+                    "includes/dev/debug.php", "templates/mock/fixture.yaml", "assets/fixtures/example.json",
+                    "includes/.env.local", "assets/debug.log", "includes/__pycache__/cache.pyc"]
+        for name in excluded:
             path = self.module / name
-            path.parent.mkdir(exist_ok=True)
+            path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text("Excluded\n", encoding="utf-8")
         self.command("1.0.1", "--local-only")
         archive = self.module / "dist/fixture-1.0.1.zip"
@@ -102,6 +105,8 @@ class ReleaseIntegrationTests(unittest.TestCase):
                     self.assertNotIn(b"\r\n", bundle.read("fixture/" + relative))
             self.assertFalse(any("/tools/" in name or "/dev/" in name or "/tests/" in name for name in names))
             self.assertNotIn("fixture/.env", names)
+            for name in excluded:
+                self.assertNotIn("fixture/" + name, names)
             self.assertEqual(json.loads(bundle.read("fixture/manifest.json"))["version"], "1.0.1")
             self.assertIn(b"Modules\\Fixture\\Includes\\Common", bundle.read("fixture/includes/common/Formatting.php"))
         self.assertEqual(before, self.git(self.module, "rev-parse", "HEAD"))
