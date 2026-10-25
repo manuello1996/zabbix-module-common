@@ -1,0 +1,43 @@
+/* Generated from zabbix-module-common. Module prefixes isolate installed versions. */
+.__CSS_PREFIX__-statseg {
+	padding: 10px 18px 12px;
+}
+
+.__CSS_PREFIX__-statseg + .__CSS_PREFIX__-statseg {
+	border-left: 1px solid var(--__BORDER__);
+}
+
+.__CSS_PREFIX__-statseg-label {
+	margin-bottom: 5px;
+	font-size: 10px;
+	font-weight: bold;
+	letter-spacing: .09em;
+	text-transform: uppercase;
+	color: var(--__MUTED__);
+}
+
+.__CSS_PREFIX__-tabs {
+	display: flex;
+	gap: 4px;
+	margin: 14px 0 16px;
+	border-bottom: 1px solid var(--__BORDER__);
+}
+
+.__CSS_PREFIX__-tab {
+	padding: 9px 12px 11px;
+	margin-bottom: -1px;
+	border-bottom: 2px solid transparent;
+	color: var(--__MUTED__);
+	white-space: nowrap;
+}
+
+.__CSS_PREFIX__-tab:hover {
+	color: var(--__TEXT__);
+	text-decoration: none;
+}
+
+.__CSS_PREFIX__-tab-active {
+	color: var(--__STRONG__);
+	border-bottom-color: var(--__STRONG__);
+	font-weight: bold;
+}

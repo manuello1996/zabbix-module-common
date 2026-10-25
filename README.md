@@ -1,0 +1,127 @@
+# Shared Zabbix module components
+
+The source repository for reusable components used by VMware Monitoring, Docker
+Monitoring and NetApp Monitoring. It is a developer dependency. Installed modules
+contain their own generated copies and never load files from this repository.
+
+The initial extraction contains tab and summary styles plus byte, duration and
+rate formatting. Collection, permissions, routes, state mapping and page-specific
+JavaScript remain in their respective modules. Module adapters preserve different
+unit labels and missing-value policies.
+
+## Local layout
+
+Keep these Git repositories alongside each other:
+
+```text
+modules/
+  zabbix-module-common/
+  zabbix-module-wmvare-monitoring/
+  zabbix-module-docker/
+  zabbix-module-netapp-monitoring/
+```
+
+The VMware repository's existing spelling is intentional here.
+
+Edit `templates/common.css.in` and `templates/Formatting.php.in` to update shared
+runtime components. Edit `tools/release.py` and `tools/release.ps1` to update the
+release tooling. Each module's `common.config.json` supplies its prefixes and CSS
+variables. Generated PHP classes live under that module's own namespace, and CSS
+selectors keep its existing prefix, so installed modules can use different common
+versions together.
+
+## Preview a shared change
+
+From any module directory, using Windows PowerShell:
+
+```powershell
+.\release.ps1 -SyncOnly
+.\release.ps1 -Version 1.2.1 -LocalOnly
+```
+
+`-SyncOnly` refreshes the generated files without changing the module version or
+Git history. `-LocalOnly` also updates the local manifest version and builds the
+ZIP in `dist/`, without committing, tagging, pushing or contacting GitHub. Choose
+a version appropriate to that module; `1.2.1` is only an example.
+
+## Publish a module from your machine
+
+Requirements: Git, Python 3.10 or newer, a configured Git author, and Git push
+access to the module's existing `origin`. No PHP, npm, Composer or build tools are
+required on the release machine. Zabbix still supplies PHP at runtime.
+
+First commit shared changes in this repository. Increment `common.json`'s version
+when releasing a new common-library version. The exact source commit and source
+content hash are recorded independently in every module's `common.lock.json`.
+The common repository can be pushed separately with normal Git commands; module
+release scripts do not push other repositories.
+
+Then, inside the module to publish:
+
+```powershell
+.\release.ps1 -Version 1.2.1
+```
+
+This command:
+
+1. Imports the committed local common source, including the latest release tools.
+2. Verifies the bundled files, routes and registered assets.
+3. Updates the module manifest and creates `dist/<module-id>-1.2.1.zip`.
+4. Commits **all nonignored changes in that module repository**.
+5. Creates annotated tag `v1.2.1` and atomically pushes the current branch and tag
+   to that module's `origin`.
+
+Review your module changes before releasing. Nothing is force-pushed. A Git error
+stops the command; the local commit, tag and ZIP are retained. After a temporary
+network/authentication failure, the same command can retry an unchanged local
+release. A branch divergence must be resolved with normal Git tools; if resolving
+it changes the tagged commit, use a new version or deliberately recreate the local
+unpublished tag.
+
+For a GitHub Release with the ZIP attached, install GitHub CLI, authenticate with
+`gh auth login`, then run:
+
+```powershell
+.\release.ps1 -Version 1.2.1 -GitHubRelease
+```
+
+The optional CLI/authentication check runs before the module is modified. Normal
+branch/tag publishing does not need `gh`.
+
+Python is an alternative entry point, including on Linux/macOS:
+
+```text
+python tools/release.py 1.2.1 --local-only
+python tools/release.py 1.2.1
+python tools/release.py --sync-only
+```
+
+Use `-CommonPath C:\path\to\zabbix-module-common` (Python: `--common-path`) for a
+different local layout. If the sibling common repository is absent, the script
+uses the verified, already-bundled version. `-UseBundled` (Python: `--bundled`)
+explicitly selects it even when local common sources exist. Publishing refuses a
+bundle produced from uncommitted common changes.
+
+## Standalone distribution
+
+Both the pushed module checkout and its ZIP contain all common runtime files.
+There are no submodules, symlinks, external runtime fetches or shared Zabbix-module
+dependencies. Each ZIP has one top-level directory named after the manifest ID;
+extract it under Zabbix's `modules/`, scan the directory and enable the module.
+Release tools, developer fixtures, Git metadata and local configuration are
+excluded from deployment ZIPs. Module templates, Agent 2 configuration and images
+are included when present and tracked or unignored in the module repository.
+
+To put this new local common repository on GitHub, create an empty
+`zabbix-module-common` repository in the intended account, add its URL as `origin`,
+and push `main`. No remote repository is assumed or created by the module scripts.
+
+## Verification
+
+```text
+python -m unittest discover -s tests -p "test_*.py" -v
+php tests/formatters.php /path/to/modules
+```
+
+Release integration tests use temporary Git repositories and a local bare remote.
+They exercise actual commits, tags and pushes without contacting GitHub.
