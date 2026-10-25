@@ -37,10 +37,11 @@ class ReleaseIntegrationTests(unittest.TestCase):
         shutil.copy2(COMMON / ".gitattributes", self.module / ".gitattributes")
         config = {"source_directory": "zabbix-module-common", "tokens": {
             "CSS_PREFIX": "fixture", "BORDER": "fixture-border", "MUTED": "fixture-muted",
-            "TEXT": "fixture-text", "STRONG": "fixture-strong"}}
+            "TEXT": "fixture-text", "STRONG": "fixture-strong", "JS_NAMESPACE": "FixtureCommon",
+            "LOCATION_DATA_PREFIX": "fixture-location", "LOCATION_DEPTH_VAR": "fixture-location-depth"}}
         self.save("common.config.json", config)
         self.save("manifest.json", {"id": "fixture", "namespace": "Fixture", "version": "1.0.0",
-                                    "assets": {"css": ["common.css"]}})
+                                    "assets": {"css": ["common.css"], "js": ["common.js"]}})
         self.commit(self.module)
         self.remote = self.base / "origin.git"
         self.git(self.base, "init", "--bare", str(self.remote))
@@ -87,6 +88,9 @@ class ReleaseIntegrationTests(unittest.TestCase):
             names = set(bundle.namelist())
             self.assertIn("fixture/includes/common/Formatting.php", names)
             self.assertIn("fixture/assets/css/common.css", names)
+            self.assertIn("fixture/assets/js/common.js", names)
+            self.assertIn("fixture/includes/common/LocationHierarchy.php", names)
+            self.assertIn("fixture/includes/common/SearchControl.php", names)
             self.assertFalse(any("/tools/" in name or "/dev/" in name or "/tests/" in name for name in names))
             self.assertNotIn("fixture/.env", names)
             self.assertEqual(json.loads(bundle.read("fixture/manifest.json"))["version"], "1.0.1")

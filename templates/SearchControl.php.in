@@ -1,0 +1,15 @@
+<?php declare(strict_types = 0);
+
+// Generated from zabbix-module-common. Routing and filtering stay with the caller.
+namespace Modules\__MODULE_NAMESPACE__\Includes\Common;
+
+class SearchControl {
+	public static function input(string $placeholder, string $value = '', array $attributes = []): \CTag {
+		$input = (new \CTag('input', false))->addClass('__CSS_PREFIX__-search');
+		foreach ($attributes + ['type' => 'search', 'value' => $value, 'placeholder' => $placeholder,
+			'aria-label' => $placeholder, 'autocomplete' => 'off'] as $name => $content) {
+			$input->setAttribute($name, $content);
+		}
+		return $input;
+	}
+}

@@ -4,10 +4,26 @@ The source repository for reusable components used by VMware Monitoring, Docker
 Monitoring and NetApp Monitoring. It is a developer dependency. Installed modules
 contain their own generated copies and never load files from this repository.
 
-The initial extraction contains tab and summary styles plus byte, duration and
-rate formatting. Collection, permissions, routes, state mapping and page-specific
-JavaScript remain in their respective modules. Module adapters preserve different
-unit labels and missing-value policies.
+Shared components include tab and summary styles, metric formatting, location
+hierarchies and group rows, and tab search inputs with debounce, composition,
+clear and keyboard handling. Collection, permissions, routes, state mapping and
+response rendering remain in their respective modules. Module adapters preserve
+different unit labels, missing-value policies, search delays and storage rules.
+
+| Source | Responsibility | Current callers |
+| --- | --- | --- |
+| `templates/LocationHierarchy.php.in` | Macro parsing, stable keys, ancestors, tree sorting, pre-pagination aggregation and page headers | VMware and NetApp main inventories |
+| `templates/LocationRows.php.in` | Group buttons, counts, indentation and descendant row visibility | VMware and NetApp main inventories |
+| `templates/SearchControl.php.in` | Escaped search inputs, labels and module styling | VMware tabs, Docker containers/images/graphs, NetApp tabs |
+| `templates/common.js.in` | Debounced input events, IME, clear/Escape/submit and nested collapse presentation | All three modules |
+| `templates/Formatting.php.in` | Byte, duration and rate formatting | All three modules |
+
+VMware keeps CProfile persistence, ordered save requests and pending-write replay.
+NetApp keeps its per-user browser-tab collapse state and permission-aware problem
+aggregation. Docker's main inventory retains its existing host-group filtering;
+the extraction does not add location grouping where none existed. Search request
+URLs, response validation, cache lifetimes, stale-response guards and pagination
+remain with the caller.
 
 ## Local layout
 
@@ -23,8 +39,8 @@ modules/
 
 The VMware repository's existing spelling is intentional here.
 
-Edit `templates/common.css.in` and `templates/Formatting.php.in` to update shared
-runtime components. Edit `tools/release.py` and `tools/release.ps1` to update the
+Edit files in `templates/` to update shared runtime components. Edit
+`tools/release.py` and `tools/release.ps1` to update the
 release tooling. Each module's `common.config.json` supplies its prefixes and CSS
 variables. Generated PHP classes live under that module's own namespace, and CSS
 selectors keep its existing prefix, so installed modules can use different common
@@ -121,7 +137,13 @@ and push `main`. No remote repository is assumed or created by the module script
 ```text
 python -m unittest discover -s tests -p "test_*.py" -v
 php tests/formatters.php /path/to/modules
+php tests/location-rendering.php /path/to/modules /path/to/zabbix/ui
+node tests/interactions.mjs
 ```
 
 Release integration tests use temporary Git repositories and a local bare remote.
 They exercise actual commits, tags and pushes without contacting GitHub.
+The interaction suite loads the generated assets and the actual module adapters,
+including Docker's lazy graph/image controls and VMware's tab search behavior.
+It checks all three namespaces together. Node is needed only for this test suite,
+not for publishing or installing a module.

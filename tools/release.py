@@ -17,7 +17,11 @@ from pathlib import Path
 
 GENERATED = {
     "templates/Formatting.php.in": "includes/common/Formatting.php",
+    "templates/LocationHierarchy.php.in": "includes/common/LocationHierarchy.php",
+    "templates/LocationRows.php.in": "includes/common/LocationRows.php",
+    "templates/SearchControl.php.in": "includes/common/SearchControl.php",
     "templates/common.css.in": "assets/css/common.css",
+    "templates/common.js.in": "assets/js/common.js",
     "tools/release.py": "tools/release.py",
     "tools/release.ps1": "release.ps1",
 }
@@ -119,7 +123,7 @@ def verify_bundle(root):
 
 
 def validate_module(root, manifest):
-    needed = ["Module.php", "includes/common/Formatting.php", "assets/css/common.css"]
+    needed = ["Module.php", *(name for name in GENERATED.values() if name.startswith(("includes/", "assets/")))]
     for kind in ["css", "js"]:
         needed.extend(f"assets/{kind}/{name}" for name in manifest.get("assets", {}).get(kind, []))
     for action in manifest.get("actions", {}).values():
@@ -131,6 +135,9 @@ def validate_module(root, manifest):
             raise ReleaseError(f"Required module file is missing: {relative}")
     if "common.css" not in manifest.get("assets", {}).get("css", []):
         raise ReleaseError("manifest.json must register common.css.")
+    scripts = manifest.get("assets", {}).get("js", [])
+    if not scripts or scripts[0] != "common.js":
+        raise ReleaseError("manifest.json must register common.js before module JavaScript.")
 
 
 def package(root, manifest):
@@ -145,8 +152,8 @@ def package(root, manifest):
             target = safe_path(root, name)
             if target.is_file():
                 files.append((name, target))
-    for name in ["manifest.json", "Module.php", "common.lock.json", "assets/css/common.css",
-                 "includes/common/Formatting.php"]:
+    for name in ["manifest.json", "Module.php", "common.lock.json",
+                 *(name for name in GENERATED.values() if name.startswith(("includes/", "assets/")))]:
         if name not in {relative for relative, _ in files}:
             raise ReleaseError(f"Required runtime file is ignored or absent: {name}")
     out = safe_path(root, "dist")
