@@ -24,7 +24,8 @@ different unit labels, missing-value policies, search delays and storage rules.
 | `templates/Sparkline.php.in` | History placeholders and metadata | VMware hypervisors and Docker containers/summaries |
 | `templates/ItemActions.php.in` | Native Zabbix item-menu links with item IDs and return URLs | VMware and NetApp value adapters |
 | `templates/Pager.php.in` | Native pagination, total-based pagination, AJAX navigation and client controls | All three modules |
-| `templates/components.js.in` | Sparkline drawing, keyboard/direction sorting, client paging and live badges | VMware and Docker |
+| `templates/RowDetails.php.in` | NetApp-standard expand buttons, accessible detail rows, responsive metric groups and table wrappers | NetApp resources, VMware datastore/port details, Docker image/mount/Compose and container detail tables |
+| `templates/components.js.in` | Sparkline drawing, keyboard/direction sorting, client paging, live badges and expandable row state | All three modules |
 | `templates/components.css.in` | Complete shared component styles, light/dark themes and reduced motion | All three modules |
 
 VMware keeps CProfile persistence, ordered save requests and pending-write replay.
@@ -50,6 +51,18 @@ while tooltips retain the actual percentages. Docker converts memory history
 from bytes to a percentage of node memory before drawing; missing node capacity
 displays an unavailable history. Disabled states and history fetching remain with
 the adapters.
+
+`RowDetails` owns the common layout for table sub-elements: an explicit native
+button beside the resource name, a shaded expanded row and bordered groups with
+headings and metric tables. Its grid uses two columns and switches to one at
+1100px. Use `toggle()`, `name()`, `row()`, `group()`, `grid()` and `table()` to
+compose the layout. Pass `records: true` to `group()` for multi-column entity
+tables, keeping their columns balanced instead of using metric/value widths.
+The JavaScript helper synchronizes the button, hidden panel
+and parent-row highlight; native buttons provide keyboard activation. NetApp
+retains search-triggered expansion, VMware retains lazy attachment loading and
+retry, and Docker keeps image detail rows with their parents during sorting and
+filtering. VMware tab panels omit headings that repeat the selected tab.
 
 The manifest loads `common.css`, `components.css`, then the module themes, and
 `common.js`, `components.js`, then module integration scripts. Module themes do
@@ -183,6 +196,7 @@ php tests/location-rendering.php /path/to/modules /path/to/zabbix/ui
 php tests/components.php /path/to/modules /path/to/zabbix/ui
 node tests/interactions.mjs
 node tests/components.mjs
+node tests/row-details.mjs
 ```
 
 Release integration tests use temporary Git repositories and a local bare remote.

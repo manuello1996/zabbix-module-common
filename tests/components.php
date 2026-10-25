@@ -52,6 +52,21 @@ foreach (['VMwareMonitoring' => ['zabbix-module-wmvare-monitoring', 'vmware-moni
 	$summary = $class('Summary'); $breadcrumbs = $class('Breadcrumbs'); $badges = $class('ProblemBadges');
 	$capacity = $class('CapacityBar'); $sorting = $class('SortableHeader'); $sparkline = $class('Sparkline');
 	$items = $class('ItemActions'); $pager = $class('Pager');
+	$details = $class('RowDetails');
+	$detail_id = 'detail-'.strtolower($namespace);
+	$detail_table = (new CTableInfo())->setHeader(['Metric', 'Latest value'])->addRow(['<metric>', new CLink('12', 'history.php?itemid=9')]);
+	$toggle = $details::toggle('Metrics (1)', $detail_id, false, ['aria-label' => 'Metrics: <resource>']);
+	$parent = new CRow([$details::name('<resource>', $toggle), 'online']);
+	$child = $details::row($detail_id, 2, $details::grid([$details::group('IOPS', $detail_table)]));
+	$html = (string) $details::table((new CTableInfo())->addRow($parent)->addRow($child));
+	$tree = xpath($html);
+	check($tree->query('//button[@type="button" and @aria-expanded="false" and @aria-controls="'.$detail_id.'"]')->length === 1, 'Explicit native expand control');
+	check($tree->query('//tr[@id="'.$detail_id.'" and @hidden]/td[@colspan="2"]')->length === 1, 'Collapsed details span the complete table');
+	check($tree->query('//*[@role="region" and @aria-labelledby="'.$detail_id.'-toggle"]')->length === 1, 'Detail region is labelled by its control');
+	check($tree->query('//div[@class="'.$prefix.'-metric-group"]/h5[text()="IOPS"]')->length === 1, 'NetApp-standard group heading');
+	check($tree->query('//div[@class="'.$prefix.'-metric-group"]/table//a[contains(@href,"itemid=9")]')->length === 1, 'Nested tables retain native metric links');
+	check(str_contains($html, '&lt;resource&gt;') && str_contains($html, '&lt;metric&gt;'), 'Detail labels are escaped');
+	check(!str_contains((string) $details::row($detail_id.'-open', 2, 'content', true), 'hidden'), 'Search can render an initially expanded detail row');
 	$card = (string) $summary::strip([$summary::card('<VMs>', new CLink('12', 'zabbix.php?action=inventory'),
 		['value_id' => 'live-count', 'unit' => '%', 'aside' => $capacity::render(42)])], ['id' => 'summary']);
 	$tree = xpath($card);
@@ -122,4 +137,36 @@ check($tree->query('//*[@data-spark-total="1024" and @data-spark-itemids="99"]')
 check(str_contains($tree->query('//*[@data-spark-total]')->item(0)->getAttribute('title'), 'node memory'), 'Memory normalization basis is visible');
 $tree = xpath($makeSparkline(['98'], 'up'));
 check($tree->query('//*[@data-spark-itemids="98" and not(@data-spark-total)]')->length === 1, 'CPU percentages are not converted again');
+require_once $modules.'/zabbix-module-wmvare-monitoring/includes/VMwareFormatter.php';
+require_once $modules.'/zabbix-module-wmvare-monitoring/includes/VMwareItemMenu.php';
+require_once $modules.'/zabbix-module-wmvare-monitoring/includes/VMwareTabRenderer.php';
+$renderer = 'Modules\\VMwareMonitoring\\Includes\\VMwareTabRenderer';
+$empty = ['rows' => [], 'page' => 1, 'per_page' => 50, 'total' => 0, 'search' => ''];
+foreach (['hypervisors' => $empty, 'vms' => $empty, 'datastores' => ['unique' => $empty],
+	'clusters' => [], 'alarms' => [], 'dvswitches' => ['enabled' => false]] as $tab => $fixture) {
+	check(xpath($renderer::render($tab, $fixture))->query('//h4')->length === 0, 'VMware '.$tab.' has no redundant tab heading');
+}
+$datastore = ['identity' => 'uuid:ds1', 'name' => '<datastore>', 'type' => 'VMFS', 'uuid' => 'ds1',
+	'vcenter_hostid' => '42', 'total' => 4096, 'free_pct' => 50, 'hypervisors' => ['hypervisor-1'], 'attachments' => 1];
+$html = $renderer::render('datastores', ['unique' => array_replace($empty, ['rows' => [$datastore], 'total' => 1])]);
+$tree = xpath($html);
+check($tree->query('//button[@data-vmware-monitoring-datastore-toggle and @aria-expanded="false"]')->length === 1, 'Datastore uses an explicit expand button');
+check($tree->query('//tr[@role="button"]')->length === 0, 'Datastore rows retain native table semantics');
+check($tree->query('//tr[@data-vmware-monitoring-datastore-url and @hidden]/td[@colspan="7"]')->length === 1, 'Datastore retains its lazy endpoint and full-width detail row');
+$html = $renderer::renderDatastoreAttachments([['hypervisor' => '<hypervisor>', 'type' => 'VMFS', 'total' => 4096,
+	'free_pct' => 50, 'read_latency' => 2, 'write_latency' => 4, 'read_iops' => 12, 'write_iops' => 24, 'multipath' => 2]]);
+$tree = xpath($html);
+check($tree->query('//div[@class="vmware-monitoring-metric-group"]/h5')->length === 1, 'Attachment metrics are grouped by hypervisor');
+check($tree->query('//th[text()="Metric"]')->length === 1 && $tree->query('//th[text()="Latest value"]')->length === 1, 'Datastore details use the standard metric/value table');
+check(str_contains($html, '&lt;hypervisor&gt;'), 'Attachment headings escape resource names');
+require_once $modules.'/zabbix-module-docker/includes/DockerCollector.php';
+require_once $modules.'/zabbix-module-docker/includes/DockerFormatter.php';
+require_once $modules.'/zabbix-module-docker/actions/CControllerDockerContainer.php';
+$container = (new ReflectionClass('Modules\\MonitorDocker\\Actions\\CControllerDockerContainer'))->newInstanceWithoutConstructor();
+foreach (['makeMountsSection' => 'Mounts', 'makeLabelsSection' => 'Labels'] as $method => $label) {
+	$html = (string) (new ReflectionMethod($container, $method))->invoke($container, 'container-1', null);
+	$tree = xpath($html);
+	check($tree->query('//div[contains(@class,"docker-metric-group") and @data-module-detail-records="1"]/h5[text()="'.$label.'"]')->length === 1,
+		'Docker container '.$label.' uses the common record table card');
+}
 echo "Shared components passed $checks native Zabbix HTML/behavior checks across three isolated namespaces.\n";

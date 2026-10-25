@@ -69,6 +69,29 @@ html[theme="dark-theme"], html[theme="hc-dark"] {
 .__CSS_PREFIX__-pager-btn:disabled { opacity: .5; cursor: default; }
 .__CSS_PREFIX__-pager-btn:not(:disabled):hover { border-color: var(--__CSS_PREFIX__-ui-accent); }
 .__CSS_PREFIX__-pager-btn:focus-visible { outline: 2px solid var(--__CSS_PREFIX__-ui-accent); outline-offset: 2px; }
+
+/* NetApp is the shared standard for expandable table details. */
+.__CSS_PREFIX__-table-wrap { overflow-x: auto; }
+.__CSS_PREFIX__-table-wrap > table > tbody > .__CSS_PREFIX__-metrics-row > td { padding: 0; background: var(--__CSS_PREFIX__-ui-surface); }
+.__CSS_PREFIX__-resource-name { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px 16px; }
+.__CSS_PREFIX__-metrics-toggle { border: 0; background: transparent; box-shadow: none; padding: 0; height: auto; line-height: inherit; color: var(--__CSS_PREFIX__-ui-accent); white-space: nowrap; cursor: pointer; }
+.__CSS_PREFIX__-metrics-toggle::before { content: '▸'; display: inline-block; margin-right: 5px; }
+.__CSS_PREFIX__-metrics-toggle[aria-expanded="true"]::before { content: '▾'; }
+.__CSS_PREFIX__-metrics-toggle:hover { background: transparent; color: var(--__CSS_PREFIX__-ui-accent); text-decoration: underline; }
+.__CSS_PREFIX__-metrics-toggle:focus-visible { outline: 2px solid var(--__CSS_PREFIX__-ui-accent); outline-offset: 4px; }
+.__CSS_PREFIX__-metrics-row[hidden] { display: none; }
+.__CSS_PREFIX__-table-wrap > table > tbody > .__CSS_PREFIX__-resource-expanded > td { background: var(--__CSS_PREFIX__-ui-surface); border-bottom: 0; }
+.__CSS_PREFIX__-metric-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; padding: 16px; background: var(--__CSS_PREFIX__-ui-surface); }
+.__CSS_PREFIX__-metric-group { min-width: 0; background: var(--__CSS_PREFIX__-ui-bg); border: 1px solid var(--__CSS_PREFIX__-ui-border); border-radius: 6px; overflow: hidden; }
+.__CSS_PREFIX__-metric-group:only-child { grid-column: 1 / -1; }
+.__CSS_PREFIX__-metric-group h5 { margin: 0; padding: 12px; border-bottom: 1px solid var(--__CSS_PREFIX__-ui-border); font-size: 12px; }
+.__CSS_PREFIX__-metric-group > table { width: 100%; table-layout: fixed; margin: 0; }
+.__CSS_PREFIX__-metric-group > table td, .__CSS_PREFIX__-metric-group > table th { padding: 8px; white-space: normal; overflow-wrap: anywhere; }
+.__CSS_PREFIX__-metric-group:not([data-module-detail-records]) > table th:first-child { width: 38%; }
+.__CSS_PREFIX__-metric-group:not([data-module-detail-records]) > table th:last-child { width: 13%; }
+@media (max-width: 1100px) {
+	.__CSS_PREFIX__-metric-grid { grid-template-columns: minmax(0, 1fr); }
+}
 @media (max-width: 900px) {
 	.__CSS_PREFIX__-statseg { flex-basis: 100px; }
 }

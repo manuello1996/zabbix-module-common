@@ -134,5 +134,26 @@
 		}
 	};
 
-	Object.assign(window.__JS_NAMESPACE__, {SortableHeader, Pager, ProblemBadges, Sparkline});
+	const RowDetails = {
+		setExpanded(button, panel, expanded) {
+			if (!button || !panel) return false;
+			button.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+			panel.hidden = !expanded;
+			button.closest('tr')?.classList.toggle('__CSS_PREFIX__-resource-expanded', expanded);
+			return expanded;
+		},
+		toggle(button, panel) {
+			return this.setExpanded(button, panel, button.getAttribute('aria-expanded') !== 'true');
+		},
+		bind(root) {
+			root.addEventListener('click', event => {
+				const button = event.target.closest?.('.__CSS_PREFIX__-metrics-toggle[data-module-details-toggle]');
+				if (!button || (root.contains && !root.contains(button))) return;
+				const panel = document.getElementById(button.getAttribute('aria-controls'));
+				if (panel) this.toggle(button, panel);
+			});
+		}
+	};
+
+	Object.assign(window.__JS_NAMESPACE__, {SortableHeader, Pager, ProblemBadges, Sparkline, RowDetails});
 })();
