@@ -1,0 +1,12 @@
+<?php declare(strict_types = 0);
+
+namespace Modules\__MODULE_NAMESPACE__\Includes\Common;
+
+class Sparkline {
+	public static function holder(array $attributes = [], string $kind = ''): \CDiv {
+		$holder = (new \CDiv())->addClass('__CSS_PREFIX__-sparkline')->setAttribute('aria-label', _('Loading history'));
+		if ($kind !== '') { $holder->addClass('__CSS_PREFIX__-spark-'.$kind); }
+		foreach ($attributes as $name => $value) { $holder->setAttribute($name, $value); }
+		return $holder;
+	}
+}

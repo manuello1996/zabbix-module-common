@@ -45,6 +45,7 @@ function environment(directory) {
 		clearTimeout(id) { timers.delete(id); }};
 	vm.createContext(context);
 	vm.runInContext(read(`${directory}/assets/js/common.js`), context);
+	vm.runInContext(read(`${directory}/assets/js/components.js`), context);
 	const flush = () => {
 		assert.equal(timers.size, 1);
 		const [id, task] = [...timers][0];

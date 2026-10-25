@@ -41,7 +41,7 @@ class ReleaseIntegrationTests(unittest.TestCase):
             "LOCATION_DATA_PREFIX": "fixture-location", "LOCATION_DEPTH_VAR": "fixture-location-depth"}}
         self.save("common.config.json", config)
         self.save("manifest.json", {"id": "fixture", "namespace": "Fixture", "version": "1.0.0",
-                                    "assets": {"css": ["common.css"], "js": ["common.js"]}})
+                                    "assets": {"css": ["common.css", "components.css"], "js": ["common.js", "components.js"]}})
         self.commit(self.module)
         self.remote = self.base / "origin.git"
         self.git(self.base, "init", "--bare", str(self.remote))
@@ -91,6 +91,13 @@ class ReleaseIntegrationTests(unittest.TestCase):
             self.assertIn("fixture/assets/js/common.js", names)
             self.assertIn("fixture/includes/common/LocationHierarchy.php", names)
             self.assertIn("fixture/includes/common/SearchControl.php", names)
+            self.assertIn("fixture/assets/js/components.js", names)
+            self.assertIn("fixture/assets/css/components.css", names)
+            self.assertIn("fixture/includes/common/Pager.php", names)
+            self.assertIn(b"__NAMESPACE__", bundle.read("fixture/includes/common/bootstrap.php"))
+            for relative in release.GENERATED.values():
+                if not relative.startswith("tools/") and relative != "release.ps1":
+                    self.assertNotIn(b"\r\n", bundle.read("fixture/" + relative))
             self.assertFalse(any("/tools/" in name or "/dev/" in name or "/tests/" in name for name in names))
             self.assertNotIn("fixture/.env", names)
             self.assertEqual(json.loads(bundle.read("fixture/manifest.json"))["version"], "1.0.1")

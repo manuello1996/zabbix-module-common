@@ -1,21 +1,4 @@
 /* Generated from zabbix-module-common. Module prefixes isolate installed versions. */
-.__CSS_PREFIX__-statseg {
-	padding: 10px 18px 12px;
-}
-
-.__CSS_PREFIX__-statseg + .__CSS_PREFIX__-statseg {
-	border-left: 1px solid var(--__BORDER__);
-}
-
-.__CSS_PREFIX__-statseg-label {
-	margin-bottom: 5px;
-	font-size: 10px;
-	font-weight: bold;
-	letter-spacing: .09em;
-	text-transform: uppercase;
-	color: var(--__MUTED__);
-}
-
 .__CSS_PREFIX__-tabs {
 	display: flex;
 	gap: 4px;

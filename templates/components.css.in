@@ -1,0 +1,77 @@
+/* Complete component presentation, generated independently for each module. */
+:root {
+	--__CSS_PREFIX__-ui-bg: #fff;
+	--__CSS_PREFIX__-ui-border: #e0e4e9;
+	--__CSS_PREFIX__-ui-text: #1f2c33;
+	--__CSS_PREFIX__-ui-muted: #647580;
+	--__CSS_PREFIX__-ui-accent: #0275b8;
+	--__CSS_PREFIX__-ui-surface: #f4f6f8;
+	--__CSS_PREFIX__-ui-good: #2f9e44;
+	--__CSS_PREFIX__-ui-critical: #e03131;
+	--__CSS_PREFIX__-ui-warning: #e8873a;
+}
+html[theme="dark-theme"], html[theme="hc-dark"] {
+	--__CSS_PREFIX__-ui-bg: #2b2b2b;
+	--__CSS_PREFIX__-ui-border: #454545;
+	--__CSS_PREFIX__-ui-text: #f2f2f2;
+	--__CSS_PREFIX__-ui-muted: #b4b4b4;
+	--__CSS_PREFIX__-ui-accent: #73b6e0;
+	--__CSS_PREFIX__-ui-surface: #333;
+	--__CSS_PREFIX__-ui-good: #60cd89;
+	--__CSS_PREFIX__-ui-critical: #ff6b6b;
+	--__CSS_PREFIX__-ui-warning: #f3b765;
+}
+
+.__CSS_PREFIX__-statstrip { display: flex; flex-wrap: wrap; margin: 0 0 14px; background: var(--__CSS_PREFIX__-ui-bg); border: 1px solid var(--__CSS_PREFIX__-ui-border); border-radius: 10px; }
+.__CSS_PREFIX__-statseg { flex: 1 1 130px; min-width: 100px; padding: 10px 18px 12px; }
+.__CSS_PREFIX__-statseg + .__CSS_PREFIX__-statseg { border-left: 1px solid var(--__CSS_PREFIX__-ui-border); }
+.__CSS_PREFIX__-statseg-label { margin-bottom: 5px; font-size: 10px; font-weight: bold; letter-spacing: .09em; text-transform: uppercase; color: var(--__CSS_PREFIX__-ui-muted); }
+.__CSS_PREFIX__-statseg-figure { display: flex; align-items: baseline; gap: 6px; min-height: 22px; }
+.__CSS_PREFIX__-statseg .__CSS_PREFIX__-card-value { font-size: 19px; font-weight: bold; font-variant-numeric: tabular-nums; line-height: 1.3; color: var(--__CSS_PREFIX__-ui-text); }
+.__CSS_PREFIX__-card-value a { color: inherit; }
+.__CSS_PREFIX__-card-unit { font-size: 11px; color: var(--__CSS_PREFIX__-ui-muted); }
+.__CSS_PREFIX__-statseg-aside { margin-left: auto; align-self: center; min-width: 55px; }
+.__CSS_PREFIX__-statseg-aside .__CSS_PREFIX__-progress { width: 65px; }
+.__CSS_PREFIX__-card-running .__CSS_PREFIX__-card-value,
+.__CSS_PREFIX__-card-healthy .__CSS_PREFIX__-card-value { color: var(--__CSS_PREFIX__-ui-good); }
+.__CSS_PREFIX__-card-stopped .__CSS_PREFIX__-card-value,
+.__CSS_PREFIX__-card-unhealthy .__CSS_PREFIX__-card-value { color: var(--__CSS_PREFIX__-ui-critical); }
+
+.__CSS_PREFIX__-breadcrumb { display: flex; align-items: center; flex-wrap: wrap; min-width: 0; min-height: 22px; margin: 0; padding: 0; font-size: 13px; line-height: 22px; color: var(--__CSS_PREFIX__-ui-text); }
+.__CSS_PREFIX__-breadcrumb a { color: var(--__CSS_PREFIX__-ui-muted); }
+.__CSS_PREFIX__-breadcrumb a:hover { color: var(--__CSS_PREFIX__-ui-accent); text-decoration: underline; }
+.__CSS_PREFIX__-breadcrumb a:focus-visible { outline: 2px solid var(--__CSS_PREFIX__-ui-accent); outline-offset: 2px; }
+.__CSS_PREFIX__-breadcrumb-sep { margin: 0 8px; color: var(--__CSS_PREFIX__-ui-muted); }
+.__CSS_PREFIX__-breadcrumb-current { font-weight: bold; }
+
+.__CSS_PREFIX__-progress { height: 6px; border-radius: 3px; overflow: hidden; background: var(--__CSS_PREFIX__-ui-surface); }
+.__CSS_PREFIX__-progress > .__CSS_PREFIX__-progress-fill { height: 100%; border-radius: inherit; background: var(--__CSS_PREFIX__-ui-good); transition: width .4s ease; }
+.__CSS_PREFIX__-progress[data-tone="warning"] > .__CSS_PREFIX__-progress-fill { background: var(--__CSS_PREFIX__-ui-warning); }
+.__CSS_PREFIX__-progress[data-tone="critical"] > .__CSS_PREFIX__-progress-fill { background: var(--__CSS_PREFIX__-ui-critical); }
+.__CSS_PREFIX__-progress[data-tone="stale"] > .__CSS_PREFIX__-progress-fill { background: var(--__CSS_PREFIX__-ui-muted); }
+
+.__CSS_PREFIX__-sort { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; user-select: none; }
+.__CSS_PREFIX__-sort:focus-visible { outline: 2px solid var(--__CSS_PREFIX__-ui-accent); outline-offset: 2px; }
+.__CSS_PREFIX__-sort-arrow { display: inline-block; margin-left: 3px; }
+
+.__CSS_PREFIX__-sparkline { flex: 0 0 auto; width: 90px; height: 24px; }
+.__CSS_PREFIX__-spark-svg { display: block; width: 100%; height: 100%; }
+.__CSS_PREFIX__-spark-line { fill: none; stroke: var(--__CSS_PREFIX__-ui-good); stroke-width: 1.5; stroke-linejoin: round; }
+.__CSS_PREFIX__-spark-fill { fill: var(--__CSS_PREFIX__-ui-good); opacity: .12; }
+.__CSS_PREFIX__-spark-flat { stroke: var(--__CSS_PREFIX__-ui-muted); stroke-width: 1; }
+.__CSS_PREFIX__-spark-point { fill: var(--__CSS_PREFIX__-ui-good); }
+.__CSS_PREFIX__-spark-restarting .__CSS_PREFIX__-spark-line { stroke: var(--__CSS_PREFIX__-ui-warning); }
+.__CSS_PREFIX__-spark-restarting .__CSS_PREFIX__-spark-fill { fill: var(--__CSS_PREFIX__-ui-warning); }
+
+.__CSS_PREFIX__-pager { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.__CSS_PREFIX__-pager-info { color: var(--__CSS_PREFIX__-ui-muted); font-size: 11px; white-space: nowrap; }
+.__CSS_PREFIX__-pager-btn { padding: 2px 8px; height: 24px; border: 1px solid var(--__CSS_PREFIX__-ui-border); border-radius: 3px; background: var(--__CSS_PREFIX__-ui-bg); color: var(--__CSS_PREFIX__-ui-text); }
+.__CSS_PREFIX__-pager-btn:disabled { opacity: .5; cursor: default; }
+.__CSS_PREFIX__-pager-btn:not(:disabled):hover { border-color: var(--__CSS_PREFIX__-ui-accent); }
+.__CSS_PREFIX__-pager-btn:focus-visible { outline: 2px solid var(--__CSS_PREFIX__-ui-accent); outline-offset: 2px; }
+@media (max-width: 900px) {
+	.__CSS_PREFIX__-statseg { flex-basis: 100px; }
+}
+@media (prefers-reduced-motion: reduce) {
+	.__CSS_PREFIX__-progress > .__CSS_PREFIX__-progress-fill { transition: none; }
+}

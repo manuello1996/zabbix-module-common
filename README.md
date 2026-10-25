@@ -4,10 +4,9 @@ The source repository for reusable components used by VMware Monitoring, Docker
 Monitoring and NetApp Monitoring. It is a developer dependency. Installed modules
 contain their own generated copies and never load files from this repository.
 
-Shared components include tab and summary styles, metric formatting, location
-hierarchies and group rows, and tab search inputs with debounce, composition,
-clear and keyboard handling. Collection, permissions, routes, state mapping and
-response rendering remain in their respective modules. Module adapters preserve
+Shared components include complete reusable renderers and their styles and
+browser behavior. Collection, permissions, routes, state mapping and domain table
+content remain in their respective modules. Module adapters preserve
 different unit labels, missing-value policies, search delays and storage rules.
 
 | Source | Responsibility | Current callers |
@@ -17,13 +16,41 @@ different unit labels, missing-value policies, search delays and storage rules.
 | `templates/SearchControl.php.in` | Complete NetApp-standard search bar: label, native input, Clear button, hint and live status | VMware tabs, Docker containers/images/graphs, NetApp tabs |
 | `templates/common.js.in` | Debounced input events, IME, clear/Escape/submit and nested collapse presentation | All three modules |
 | `templates/Formatting.php.in` | Byte, duration and rate formatting | All three modules |
+| `templates/Summary.php.in` | Summary strips/cards, values, units, live IDs and optional charts/bars | All three modules, including Docker tab summaries |
+| `templates/Breadcrumbs.php.in` | Accessible breadcrumb navigation, separators and current page | All three detail views; VMware compatibility adapter |
+| `templates/ProblemBadges.php.in` | Severity ordering, native badge metadata, scoped problem links and unavailable/empty states | All three modules; Docker asynchronous problem loader |
+| `templates/CapacityBar.php.in` | Bounded progress bars, accessibility, warning/critical/stale presentation | VMware capacity, Docker memory, NetApp capacity |
+| `templates/SortableHeader.php.in` | Native server sorting and accessible client controls | All three modules; VMware tabs and Docker containers/images |
+| `templates/Sparkline.php.in` | History placeholders and metadata | VMware hypervisors and Docker containers/summaries |
+| `templates/ItemActions.php.in` | Native Zabbix item-menu links with item IDs and return URLs | VMware and NetApp value adapters |
+| `templates/Pager.php.in` | Native pagination, total-based pagination, AJAX navigation and client controls | All three modules |
+| `templates/components.js.in` | Sparkline drawing, keyboard/direction sorting, client paging and live badges | VMware and Docker |
+| `templates/components.css.in` | Complete shared component styles, light/dark themes and reduced motion | All three modules |
 
 VMware keeps CProfile persistence, ordered save requests and pending-write replay.
 NetApp keeps its per-user browser-tab collapse state and permission-aware problem
 aggregation. Docker's main inventory retains its existing host-group filtering;
 the extraction does not add location grouping where none existed. Search request
-URLs, response validation, cache lifetimes, stale-response guards and pagination
-remain with the caller.
+URLs, response validation, cache lifetimes and stale-response guards remain with
+the caller. Paging markup and client slicing are shared; modules retain their
+server queries, page preferences, filters and request state.
+
+Use `Summary::card()` and `Summary::strip()` for summaries; values can be native
+Zabbix links/tags. `Breadcrumbs::make()` supplies separators automatically.
+`CapacityBar::render()` accepts thresholds, tone and stale status while callers
+retain their measurement labels and source-item links. `ItemActions::link()`
+receives a caller-built return URL so detail/tab/search context is preserved.
+`SortableHeader::native()` delegates server headers to Zabbix; `render()` and
+the shared JavaScript helper support client sorting without changing comparators.
+`Pager` retains native `CPagerHelper` behavior and adds `forTotal()`, `ajax()` and
+`controls()`. Its JavaScript helper bounds page numbers, slices filtered rows and
+updates counts/buttons. VMware's percentage sparklines and Docker's automatic
+scales, disabled states and history fetching remain configured by their adapters.
+
+The manifest loads `common.css`, `components.css`, then the module themes, and
+`common.js`, `components.js`, then module integration scripts. Module themes do
+not redefine shared component selectors. Each module loads its own bundled
+`includes/common/bootstrap.php`; no runtime sibling repository is required.
 
 Use `SearchControl::bar($hint, $value, $input_attributes, $options)` for tab
 searches. Its markup and styles are shared, including native square text inputs,
@@ -78,6 +105,8 @@ required on the release machine. Zabbix still supplies PHP at runtime.
 First commit shared changes in this repository. Increment `common.json`'s version
 when releasing a new common-library version. The exact source commit and source
 content hash are recorded independently in every module's `common.lock.json`.
+Source text is normalized to LF before hashing and generation, preserving bundle
+checksums across Windows and Linux clones.
 The common repository can be pushed separately with normal Git commands; module
 release scripts do not push other repositories.
 
@@ -147,7 +176,9 @@ and push `main`. No remote repository is assumed or created by the module script
 python -m unittest discover -s tests -p "test_*.py" -v
 php tests/formatters.php /path/to/modules
 php tests/location-rendering.php /path/to/modules /path/to/zabbix/ui
+php tests/components.php /path/to/modules /path/to/zabbix/ui
 node tests/interactions.mjs
+node tests/components.mjs
 ```
 
 Release integration tests use temporary Git repositories and a local bare remote.

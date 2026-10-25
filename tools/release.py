@@ -20,8 +20,19 @@ GENERATED = {
     "templates/LocationHierarchy.php.in": "includes/common/LocationHierarchy.php",
     "templates/LocationRows.php.in": "includes/common/LocationRows.php",
     "templates/SearchControl.php.in": "includes/common/SearchControl.php",
+    "templates/Summary.php.in": "includes/common/Summary.php",
+    "templates/Breadcrumbs.php.in": "includes/common/Breadcrumbs.php",
+    "templates/ProblemBadges.php.in": "includes/common/ProblemBadges.php",
+    "templates/CapacityBar.php.in": "includes/common/CapacityBar.php",
+    "templates/SortableHeader.php.in": "includes/common/SortableHeader.php",
+    "templates/Sparkline.php.in": "includes/common/Sparkline.php",
+    "templates/ItemActions.php.in": "includes/common/ItemActions.php",
+    "templates/Pager.php.in": "includes/common/Pager.php",
+    "templates/bootstrap.php.in": "includes/common/bootstrap.php",
     "templates/common.css.in": "assets/css/common.css",
     "templates/common.js.in": "assets/js/common.js",
+    "templates/components.css.in": "assets/css/components.css",
+    "templates/components.js.in": "assets/js/components.js",
     "tools/release.py": "tools/release.py",
     "tools/release.ps1": "release.ps1",
 }
@@ -88,7 +99,7 @@ def synchronize(root, source, config, manifest):
     outputs = {}
     source_hash = hashlib.sha256()
     for relative in ["common.json", *GENERATED]:
-        data = safe_path(source, relative).read_bytes()
+        data = safe_path(source, relative).read_bytes().replace(b"\r\n", b"\n")
         source_hash.update(relative.encode() + b"\0" + data + b"\0")
         if relative not in GENERATED:
             continue
@@ -96,7 +107,11 @@ def synchronize(root, source, config, manifest):
         if relative.startswith("templates/"):
             for name, value in replacements.items():
                 text = text.replace(f"__{name}__", value)
-            if re.search(r"__[A-Z_]+__", text):
+            unresolved = set(re.findall(r"__[A-Z_]+__", text))
+            if relative.endswith(".php.in"):
+                unresolved -= {"__DIR__", "__FILE__", "__NAMESPACE__", "__CLASS__", "__TRAIT__",
+                               "__FUNCTION__", "__METHOD__", "__LINE__"}
+            if unresolved:
                 raise ReleaseError(f"Unresolved template token in {relative}.")
         outputs[GENERATED[relative]] = text.encode("utf-8")
     revision, dirty = source_state(source)
@@ -138,6 +153,10 @@ def validate_module(root, manifest):
     scripts = manifest.get("assets", {}).get("js", [])
     if not scripts or scripts[0] != "common.js":
         raise ReleaseError("manifest.json must register common.js before module JavaScript.")
+    if len(scripts) < 2 or scripts[1] != "components.js":
+        raise ReleaseError("manifest.json must register components.js immediately after common.js.")
+    if manifest.get("assets", {}).get("css", [])[:2] != ["common.css", "components.css"]:
+        raise ReleaseError("manifest.json must register common.css and components.css before module styles.")
 
 
 def package(root, manifest):
