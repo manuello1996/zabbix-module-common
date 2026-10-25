@@ -113,4 +113,13 @@ foreach (['VMwareMonitoring' => ['zabbix-module-wmvare-monitoring', 'vmware-moni
 	check($css_standard === null || $css === $css_standard, 'Complete shared styling is identical across namespaces');
 	$css_standard = $css;
 }
+// Exercise the actual Docker view factory used by CPU and memory cells.
+preg_match('/^\$makeSparkline = static function.*?^};/ms',
+	file_get_contents($modules.'/zabbix-module-docker/views/docker.view.php'), $factory);
+eval('use Modules\\MonitorDocker\\Includes\\Common\\Sparkline;'.$factory[0]);
+$tree = xpath($makeSparkline(['99'], 'up', 'single', 1024));
+check($tree->query('//*[@data-spark-total="1024" and @data-spark-itemids="99"]')->length === 1, 'Memory holder supplies the normalization capacity');
+check(str_contains($tree->query('//*[@data-spark-total]')->item(0)->getAttribute('title'), 'node memory'), 'Memory normalization basis is visible');
+$tree = xpath($makeSparkline(['98'], 'up'));
+check($tree->query('//*[@data-spark-itemids="98" and not(@data-spark-total)]')->length === 1, 'CPU percentages are not converted again');
 echo "Shared components passed $checks native Zabbix HTML/behavior checks across three isolated namespaces.\n";

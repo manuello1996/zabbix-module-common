@@ -44,8 +44,12 @@ receives a caller-built return URL so detail/tab/search context is preserved.
 the shared JavaScript helper support client sorting without changing comparators.
 `Pager` retains native `CPagerHelper` behavior and adds `forTotal()`, `ajax()` and
 `controls()`. Its JavaScript helper bounds page numbers, slices filtered rows and
-updates counts/buttons. VMware's percentage sparklines and Docker's automatic
-scales, disabled states and history fetching remain configured by their adapters.
+updates counts/buttons. Every sparkline uses a fixed 0–100% vertical axis; there
+is no automatic scaling mode. Values outside the range are bounded visually,
+while tooltips retain the actual percentages. Docker converts memory history
+from bytes to a percentage of node memory before drawing; missing node capacity
+displays an unavailable history. Disabled states and history fetching remain with
+the adapters.
 
 The manifest loads `common.css`, `components.css`, then the module themes, and
 `common.js`, `components.js`, then module integration scripts. Module themes do

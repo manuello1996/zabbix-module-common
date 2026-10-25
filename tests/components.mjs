@@ -77,26 +77,30 @@ for (const [directory, namespace, prefix] of modules) {
 	assert.equal(target.children[0].children.length, 0, 'Badge metadata never becomes HTML');
 	const history = [[1, 10], [2, 20], [3, 30]];
 	const line = () => target.children[0].children.find(child => child.tagName === 'polyline');
-	Sparkline.draw(target, history, {scale: 'percent'});
+	Sparkline.draw(target, history);
 	const percentPoints = line().getAttribute('points');
-	Sparkline.draw(target, history, {scale: 'auto'});
-	assert.notEqual(line().getAttribute('points'), percentPoints, 'VMware percentages and Docker automatic scale remain distinct');
-	assert.equal(line().getAttribute('points'), '0.0,21.0 50.0,12.0 100.0,3.0');
-	assert.match(target.getAttribute('aria-label'), /Current: 30.0/);
+	assert.equal(percentPoints, '0.0,19.2 50.0,17.4 100.0,15.6');
+	assert.match(target.getAttribute('aria-label'), /Current: 30.0%/);
+	Sparkline.draw(target, [[1, 0], [2, 20], [3, 100]]);
+	assert.equal(line().getAttribute('points').split(' ')[1], percentPoints.split(' ')[1], 'Neighboring values cannot rescale the same percentage');
+	Sparkline.draw(target, [[1, -25], [2, 0], [3, 50], [4, 100], [5, 175]]);
+	assert.equal(line().getAttribute('points'), '0.0,21.0 25.0,21.0 50.0,12.0 75.0,3.0 100.0,3.0');
+	assert.match(target.getAttribute('aria-label'), /Current: 175.0%/, 'Chart bounds retain actual percentages in tooltips');
 	Sparkline.draw(target, [[1, null], [2, NaN], [3, Infinity], [4, '']], {emptyLabel: 'Missing'});
 	assert.equal(target.getAttribute('aria-label'), 'Missing'); assert.equal(target.children[0].children[0].tagName, 'line');
-	Sparkline.draw(target, [[1, 42]], {scale: 'percent', singlePoint: 'dot'});
+	Sparkline.draw(target, [[1, 42]]);
 	assert.equal(target.children[0].children.at(-1).tagName, 'circle');
+	assert.equal(target.children[0].children.at(-1).getAttribute('cy'), '13.4', 'Single observations use the same percentage scale');
 	Sparkline.draw(target, [[1, 42]], {singlePoint: 'flat'});
 	assert.equal(target.children[0].children[0].tagName, 'line');
-	Sparkline.draw(target, [[1, 5], [2, 5]], {scale: 'auto'});
-	assert.equal(line().getAttribute('points'), '0.0,12.0 100.0,12.0', 'Flat histories have no NaN coordinates');
+	Sparkline.draw(target, [[1, 5], [2, 5]]);
+	assert.equal(line().getAttribute('points'), '0.0,20.1 100.0,20.1', 'Constant histories retain their absolute percentage');
 	Sparkline.draw(target, history, {disabled: true});
 	assert.equal(target.children[0].children[0].tagName, 'line');
 	Sparkline.draw(target, Array.from({length: 120}, (_x, index) => [index, index]), {maxPoints: 60});
 	assert.equal(line().getAttribute('points').split(' ').length, 60);
 	assert.match(target.getAttribute('aria-label'), /Current: 119.0/, 'Sampling retains latest observation');
-	// Exercise the shipped adapters, preserving their distinct plotting policies.
+	// Exercise the shipped adapters with the same percentage plotting policy.
 	if (namespace !== 'NetAppCommon') {
 		const filename = namespace === 'VMwareCommon' ? 'vmware.monitoring.view.js.php' : 'docker.view.js.php';
 		const source = readFileSync(new URL(`${directory}/views/js/${filename}`, root), 'utf8')
@@ -111,10 +115,23 @@ for (const [directory, namespace, prefix] of modules) {
 		}
 		else {
 			context.window.monitor_docker._renderSparkline(target, history, 'up');
-			assert.equal(line().getAttribute('points'), '0.0,21.0 50.0,12.0 100.0,3.0');
+			assert.equal(line().getAttribute('points'), percentPoints, 'Docker and VMware use identical axes');
+			assert.match(target.getAttribute('aria-label'), /Current: 30.0%/);
 			context.window.monitor_docker._renderSparkline(target, history, 'off');
 			assert.equal(target.children[0].children[0].tagName, 'line');
 			const app = context.window.monitor_docker;
+			const memoryHistory = Object.freeze([[1, 256], [2, 512], [3, 768]].map(point => Object.freeze(point)));
+			target.dataset.sparkTotal = '1024';
+			app._renderSparkline(target, memoryHistory, 'up');
+			assert.equal(line().getAttribute('points'), '0.0,16.5 50.0,12.0 100.0,7.5', 'Memory bytes are converted to node memory percentages');
+			assert.match(target.getAttribute('aria-label'), /Current: 75.0%/);
+			app._renderSparkline(target, [[1, null], [2, ''], [3, NaN], [4, Infinity]], 'up');
+			assert.equal(target.getAttribute('aria-label'), 'No history data', 'Missing memory samples cannot become zero usage');
+			for (const capacity of ['0', '', '-1', 'Infinity', 'unknown']) {
+				target.dataset.sparkTotal = capacity;
+				app._renderSparkline(target, memoryHistory, 'up');
+				assert.equal(target.getAttribute('aria-label'), 'No history data', 'Unknown node capacity cannot become a percentage');
+			}
 			const body = {querySelectorAll: () => []};
 			context.document.getElementById = id => id === 'docker-table' ? {querySelector: () => body} : null;
 			context.document.querySelectorAll = selector => selector === '.docker-sort[data-sort]'
@@ -127,4 +144,4 @@ for (const [directory, namespace, prefix] of modules) {
 		}
 	}
 }
-console.log('Shared component behavior passed across all namespaces: paging boundaries, keyboard sorting, live badges and sparkline scales/missing data.');
+console.log('Shared component behavior passed across all namespaces: paging, sorting, badges and fixed 0–100% sparklines, including Docker memory normalization.');
