@@ -95,6 +95,7 @@ class ReleaseIntegrationTests(unittest.TestCase):
             self.assertIn("fixture/assets/css/components.css", names)
             self.assertIn("fixture/includes/common/Pager.php", names)
             self.assertIn("fixture/includes/common/RowDetails.php", names)
+            self.assertIn("fixture/includes/common/AutoRefresh.php", names)
             self.assertIn(b"__NAMESPACE__", bundle.read("fixture/includes/common/bootstrap.php"))
             for relative in release.GENERATED.values():
                 if not relative.startswith("tools/") and relative != "release.ps1":

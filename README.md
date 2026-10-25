@@ -25,7 +25,8 @@ different unit labels, missing-value policies, search delays and storage rules.
 | `templates/ItemActions.php.in` | Native Zabbix item-menu links with item IDs and return URLs | VMware and NetApp value adapters |
 | `templates/Pager.php.in` | Native pagination, total-based pagination, AJAX navigation and client controls | All three modules |
 | `templates/RowDetails.php.in` | NetApp-standard expand buttons, accessible detail rows, responsive metric groups and table wrappers | NetApp resources, VMware datastore/port details, Docker image/mount/Compose and container detail tables |
-| `templates/components.js.in` | Sparkline drawing, keyboard/direction sorting, client paging, live badges and expandable row state | All three modules |
+| `templates/AutoRefresh.php.in` | VMware-standard opt-in checkbox, refresh interval bounds and accessible status | All three main inventory pages |
+| `templates/components.js.in` | Sparkline drawing, sorting, paging, badges, expandable rows and auto-refresh scheduling/status | All three modules |
 | `templates/components.css.in` | Complete shared component styles, light/dark themes and reduced motion | All three modules |
 
 VMware keeps CProfile persistence, ordered save requests and pending-write replay.
@@ -63,6 +64,19 @@ and parent-row highlight; native buttons provide keyboard activation. NetApp
 retains search-triggered expansion, VMware retains lazy attachment loading and
 retry, and Docker keeps image detail rows with their parents during sorting and
 filtering. VMware tab panels omit headings that repeat the selected tab.
+
+`AutoRefresh::control()` and `status()` provide the common main-page controls.
+The JavaScript `AutoRefresh` scheduler starts disabled on every page load; the
+Zabbix user's refresh preference determines its interval, with a 10-second
+minimum and a 60-second fallback when the preference is off. Refreshes wait for
+the preceding request to finish and skip hidden pages, open Zabbix popups and
+busy views. Disabling cancels the next timer; an in-flight request may finish.
+Modules pause/resume around navigation and searches, supply their own request
+and call `updated()` after success. Failures retain the current results and
+retry while enabled. Status labels and colors are shared, and inventory caches
+expire within the chosen interval (at most 60 seconds). Docker's previous
+always-on polling now requires the checkbox; it also has a manual Refresh button.
+Current filters, tabs, sorting and pagination remain in each module's adapter.
 
 The manifest loads `common.css`, `components.css`, then the module themes, and
 `common.js`, `components.js`, then module integration scripts. Module themes do
@@ -197,6 +211,7 @@ php tests/components.php /path/to/modules /path/to/zabbix/ui
 node tests/interactions.mjs
 node tests/components.mjs
 node tests/row-details.mjs
+node tests/auto-refresh.mjs
 ```
 
 Release integration tests use temporary Git repositories and a local bare remote.

@@ -70,6 +70,10 @@ html[theme="dark-theme"], html[theme="hc-dark"] {
 .__CSS_PREFIX__-pager-btn:not(:disabled):hover { border-color: var(--__CSS_PREFIX__-ui-accent); }
 .__CSS_PREFIX__-pager-btn:focus-visible { outline: 2px solid var(--__CSS_PREFIX__-ui-accent); outline-offset: 2px; }
 
+/* VMware's opt-in refresh control and status. */
+.__CSS_PREFIX__-auto-refresh { display: inline-flex; align-items: center; gap: 6px; margin-left: 12px; }
+.__CSS_PREFIX__-refresh-status { margin-left: 8px; font-size: .85em; font-weight: normal; color: var(--__CSS_PREFIX__-ui-muted); }
+
 /* NetApp is the shared standard for expandable table details. */
 .__CSS_PREFIX__-table-wrap { overflow-x: auto; }
 .__CSS_PREFIX__-table-wrap > table > tbody > .__CSS_PREFIX__-metrics-row > td { padding: 0; background: var(--__CSS_PREFIX__-ui-surface); }

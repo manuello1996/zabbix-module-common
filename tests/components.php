@@ -53,6 +53,14 @@ foreach (['VMwareMonitoring' => ['zabbix-module-wmvare-monitoring', 'vmware-moni
 	$capacity = $class('CapacityBar'); $sorting = $class('SortableHeader'); $sparkline = $class('Sparkline');
 	$items = $class('ItemActions'); $pager = $class('Pager');
 	$details = $class('RowDetails');
+	$refresh = $class('AutoRefresh');
+	check($refresh::interval(0) === 60 && $refresh::interval(5) === 10 && $refresh::interval(120) === 120, 'Shared refresh interval policy');
+	$refresh_id = $prefix.'-auto-refresh';
+	$tree = xpath($refresh::control($refresh_id, 30));
+	check($tree->query('//input[@id="'.$refresh_id.'" and @type="checkbox" and not(@checked)]')->length === 1, 'Auto-refresh is off by default');
+	check($tree->query('//input[@data-refresh-interval="30" and @data-updated-at and @data-auto-refresh-enabled]')->length === 1, 'Refresh control supplies interval and translated labels');
+	$tree = xpath($refresh::status($refresh_id.'-status'));
+	check($tree->query('//*[@role="status" and @aria-live="polite"]')->length === 1, 'Refresh status is accessible');
 	$detail_id = 'detail-'.strtolower($namespace);
 	$detail_table = (new CTableInfo())->setHeader(['Metric', 'Latest value'])->addRow(['<metric>', new CLink('12', 'history.php?itemid=9')]);
 	$toggle = $details::toggle('Metrics (1)', $detail_id, false, ['aria-label' => 'Metrics: <resource>']);

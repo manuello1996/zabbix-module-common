@@ -29,6 +29,7 @@ GENERATED = {
     "templates/ItemActions.php.in": "includes/common/ItemActions.php",
     "templates/Pager.php.in": "includes/common/Pager.php",
     "templates/RowDetails.php.in": "includes/common/RowDetails.php",
+    "templates/AutoRefresh.php.in": "includes/common/AutoRefresh.php",
     "templates/bootstrap.php.in": "includes/common/bootstrap.php",
     "templates/common.css.in": "assets/css/common.css",
     "templates/common.js.in": "assets/js/common.js",
