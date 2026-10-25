@@ -2,7 +2,7 @@
 (() => {
 	class SearchInput {
 		constructor(root, {selector, onChange, onCancel = () => {}, delay = 250,
-				formSelector = null, clearSelector = null}) {
+				formSelector = null, clearSelector = '[data-module-search-clear]'}) {
 			this.delay = delay;
 			const inputFor = target => target?.matches?.(selector)
 				&& (!formSelector || target.closest(formSelector)) ? target : null;
@@ -26,12 +26,17 @@
 					event.preventDefault();
 					clear(input);
 				}
+				else if (event.key === 'Enter' && !formSelector) {
+					event.preventDefault();
+					change(input, true);
+				}
 			});
 			if (clearSelector) root.addEventListener('click', event => {
 				const button = event.target.closest?.(clearSelector);
-				const form = button?.closest(formSelector);
-				const input = form?.querySelector(selector);
-				if (input) { event.preventDefault(); clear(input); }
+				const scope = button?.closest('[data-module-search]')
+					|| (formSelector ? button?.closest(formSelector) : null);
+				const input = scope?.querySelector(selector);
+				if (inputFor(input)) { event.preventDefault(); clear(input); }
 			});
 			if (formSelector) root.addEventListener('submit', event => {
 				if (!event.target.matches(formSelector)) return;

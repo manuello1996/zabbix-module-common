@@ -26,12 +26,14 @@ class Element {
 	}
 	emit(name, target = this, extra = {}) {
 		const event = {target, preventDefault() { this.prevented = true; }, ...extra};
-		for (const callback of this.listeners.get(name) || []) callback(event);
+		for (let node = this; node; node = node.parent) {
+			for (const callback of node.listeners.get(name) || []) callback(event);
+		}
 		return event;
 	}
 	matches(selector) { return selector.split(',').some(value => this.selectors.has(value.trim())); }
-	closest(selector) { return this.matches(selector) ? this : this.form?.closest(selector); }
-	querySelector() { return this.input; }
+	closest(selector) { return this.matches(selector) ? this : (this.parent || this.form)?.closest(selector); }
+	querySelector(selector) { return this.input?.matches(selector) ? this.input : undefined; }
 	focus() { this.focused = true; }
 }
 
@@ -126,6 +128,8 @@ for (const [directory, namespace, dataPrefix] of modules) {
 	app.loadTab = tab => loaded.push(tab);
 	app.bindPanel();
 	const input = new Element(['[data-vmware-monitoring-server-search]']);
+	const searchBar = new Element(['[data-module-search]']);
+	searchBar.input = input; searchBar.parent = app.panel; input.parent = searchBar;
 	input.value = ' esxi ';
 	app.panel.emit('input', input);
 	assert.equal([...timers.values()][0].delay, 350);
@@ -139,12 +143,18 @@ for (const [directory, namespace, dataPrefix] of modules) {
 	app.panel.emit('compositionstart', input);
 	assert.equal(timers.size, 0);
 	assert.equal(app.request.signal.aborted, true, 'An old response cannot replace a composing input');
+	const clear = new Element(['[data-module-search-clear]']); clear.parent = searchBar;
+	clear.emit('click');
+	assert.equal(input.value, ''); assert.equal(input.focused, true);
+	assert.equal([...timers.values()][0].delay, 0, 'The standard Clear button immediately resets VMware search');
+	flush(); assert.equal(app.getState('vms').search, '');
 }
 
 // Exercise Docker's container and lazily loaded graph/image controls from shipped code.
 {
 	const {context, timers, flush} = environment(modules[1][0]);
 	const search = new Element(['#docker-search']);
+	const searchBar = new Element(['[data-module-search]']); searchBar.input = search; search.parent = searchBar;
 	const panel = new Element();
 	const content = new Element();
 	context.document = {getElementById: id => ({'docker-search': search, 'docker-panel': panel, 'docker-content': content}[id] || null),
@@ -159,6 +169,13 @@ for (const [directory, namespace, dataPrefix] of modules) {
 	search.value = ' Alpine '; search.emit('input');
 	assert.equal([...timers.values()][0].delay, 250);
 	flush(); assert.equal(filtered[0].search, 'alpine'); assert.equal(filtered[0].page, 1);
+	const clear = new Element(['[data-module-search-clear]']); clear.parent = searchBar;
+	clear.emit('click'); flush();
+	assert.equal(filtered.at(-1).search, ''); assert.equal(search.focused, true);
+	search.value = ' enter ';
+	assert.equal(search.emit('keydown', search, {key: 'Enter'}).prevented, true);
+	assert.equal([...timers.values()][0].delay, 0); flush();
+	assert.equal(filtered.at(-1).search, 'enter');
 	app._panel_filters = {};
 	app._syncUrl = () => {};
 	const graphs = [];
@@ -169,8 +186,16 @@ for (const [directory, namespace, dataPrefix] of modules) {
 	panel.emit('input', graph); assert.equal([...timers.values()][0].delay, 250);
 	flush(); assert.deepEqual(graphs, ['cpu']);
 	const image = new Element(['[data-image-filter]']); image.dataset.imageFilter = 'name'; image.value = 'debian';
+	const imageBar = new Element(['[data-module-search]']); imageBar.input = image; image.parent = imageBar; imageBar.parent = panel;
 	panel.emit('input', image); assert.equal([...timers.values()][0].delay, 150);
 	flush(); assert.equal(filtered.at(-1).images_name, 'debian');
+	const usage = new Element(['[data-image-filter]']); usage.dataset.imageFilter = 'usage'; usage.value = 'unused';
+	const usageBar = new Element(['[data-module-search]']); usageBar.input = usage; usage.parent = usageBar; usageBar.parent = panel;
+	usage.emit('input'); flush();
+	const imageClear = new Element(['[data-module-search-clear]']); imageClear.parent = imageBar;
+	imageClear.emit('click'); flush();
+	assert.equal(filtered.at(-1).images_name, '', 'Clear targets its own search bar');
+	assert.equal(filtered.at(-1).images_usage, 'unused', 'Other image filters retain their values');
 }
 
 const isolated = {window: {}};

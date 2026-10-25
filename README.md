@@ -14,7 +14,7 @@ different unit labels, missing-value policies, search delays and storage rules.
 | --- | --- | --- |
 | `templates/LocationHierarchy.php.in` | Macro parsing, stable keys, ancestors, tree sorting, pre-pagination aggregation and page headers | VMware and NetApp main inventories |
 | `templates/LocationRows.php.in` | Group buttons, counts, indentation and descendant row visibility | VMware and NetApp main inventories |
-| `templates/SearchControl.php.in` | Escaped search inputs, labels and module styling | VMware tabs, Docker containers/images/graphs, NetApp tabs |
+| `templates/SearchControl.php.in` | Complete NetApp-standard search bar: label, native input, Clear button, hint and live status | VMware tabs, Docker containers/images/graphs, NetApp tabs |
 | `templates/common.js.in` | Debounced input events, IME, clear/Escape/submit and nested collapse presentation | All three modules |
 | `templates/Formatting.php.in` | Byte, duration and rate formatting | All three modules |
 
@@ -24,6 +24,15 @@ aggregation. Docker's main inventory retains its existing host-group filtering;
 the extraction does not add location grouping where none existed. Search request
 URLs, response validation, cache lifetimes, stale-response guards and pagination
 remain with the caller.
+
+Use `SearchControl::bar($hint, $value, $input_attributes, $options)` for tab
+searches. Its markup and styles are shared, including native square text inputs,
+260px input width, card spacing, clear controls and light/dark theme colors.
+Module-specific input styles are deliberately excluded from this component.
+`input()` is only the low-level field factory, not the complete tab-search UI.
+The shared event handler scopes each Clear button to its own bar, including tabs
+with multiple search fields. Optional labels, status hooks and extra controls
+preserve module-specific filtering without replacing the standard presentation.
 
 ## Local layout
 

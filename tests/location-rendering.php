@@ -2,6 +2,8 @@
 /** Run with PHP and a Zabbix ui directory. No database or login session required. */
 $modules = $argv[1] ?? dirname(__DIR__, 2);
 $ui = $argv[2] ?? '/usr/share/zabbix';
+require $ui.'/include/defines.inc.php';
+function zbx_formatDomId($value) { return str_replace(['[', ']'], ['_', ''], $value); }
 require $ui.'/include/classes/core/CAutoloader.php';
 $loader = new CAutoloader();
 $paths = [];
@@ -11,6 +13,8 @@ foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($ui.'/incl
 }
 $loader->addNamespace('', $paths);
 $loader->register();
+$standardBar = null;
+$standardCss = null;
 
 foreach (['VMwareMonitoring' => ['zabbix-module-wmvare-monitoring', 'vmware-monitoring', 'vmware-location'],
     'MonitorDocker' => ['zabbix-module-docker', 'docker', 'docker-location'],
@@ -33,6 +37,30 @@ foreach (['VMwareMonitoring' => ['zabbix-module-wmvare-monitoring', 'vmware-moni
 	foreach (['type="search"', 'autocomplete="off"', 'aria-label=', 'name="search"', 'id="search-box"', '&lt;script&gt;'] as $expected) {
 		if (strpos($input, $expected) === false) { throw new RuntimeException('Missing search markup: '.$expected); }
 	}
+	$bar = (string) $search::bar('Find "items"', '<script>', ['id' => 'search-box', 'name' => 'search',
+		'class' => $prefix.'-search', 'type' => 'search']);
+	$document = new DOMDocument();
+	@$document->loadHTML($bar);
+	$xpath = new DOMXPath($document);
+	$checks = [
+		'//*[@data-module-search="1" and @class="'.$prefix.'-tab-search"]',
+		'//label[@for="search-box" and text()="Search this tab"]',
+		'//input[@id="search-box" and @type="text" and @class="'.$prefix.'-tab-search-input" and @aria-describedby="search-box-hint"]',
+		'//button[@type="button" and @data-module-search-clear="1" and @aria-controls="search-box" and text()="Clear"]',
+		'//span[@id="search-box-hint" and @class="'.$prefix.'-tab-search-hint"]',
+		'//span[@role="status" and @data-module-search-status="1"]'
+	];
+	foreach ($checks as $check) {
+		if ($xpath->query($check)->length !== 1) { throw new RuntimeException('Nonstandard search bar: '.$check); }
+	}
+	$normalized = str_replace($prefix, 'module', $bar);
+	if ($standardBar !== null && $normalized !== $standardBar) { throw new RuntimeException('Search markup differs between modules'); }
+	$standardBar = $normalized;
+	$css = file_get_contents($modules.'/'.$directory.'/assets/css/common.css');
+	$component = substr($css, strpos($css, '/* The complete NetApp search bar'));
+	$component = str_replace($prefix, 'module', $component);
+	if ($standardCss !== null && $component !== $standardCss) { throw new RuntimeException('Search styles differ between modules'); }
+	$standardCss = $component;
 	if ($hierarchy::pathFromMacros([['macro' => '{$LOCATION}', 'value' => 'secret', 'type' => 1]], '{$LOCATION}') !== []) {
 		throw new RuntimeException('Secret macro exposed');
 	}
