@@ -113,6 +113,20 @@ class ReleaseIntegrationTests(unittest.TestCase):
         self.assertEqual("", self.git(self.module, "tag"))
         self.assertEqual("", self.git(self.module, "ls-remote", "origin"))
 
+    def test_widget_packages_entrypoint_and_services_without_module_php(self):
+        (self.module / "Module.php").unlink()
+        (self.module / "Widget.php").write_text("<?php // dashboard entrypoint\n", encoding="utf-8")
+        (self.module / "services").mkdir()
+        (self.module / "services/Collector.php").write_text("<?php // real collector\n", encoding="utf-8")
+        manifest = release.read_json(self.module / "manifest.json")
+        manifest["type"] = "widget"
+        self.save("manifest.json", manifest)
+        self.command("1.0.1", "--local-only")
+        with zipfile.ZipFile(self.module / "dist/fixture-1.0.1.zip") as bundle:
+            self.assertIn("fixture/Widget.php", bundle.namelist())
+            self.assertIn("fixture/services/Collector.php", bundle.namelist())
+            self.assertNotIn("fixture/Module.php", bundle.namelist())
+
     def test_publish_pushes_bundled_commit_and_tag_and_can_retry(self):
         self.command("1.0.1")
         head = self.git(self.module, "rev-parse", "HEAD")

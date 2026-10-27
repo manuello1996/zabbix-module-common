@@ -43,10 +43,11 @@ function xpath($content): DOMXPath {
 	$document->loadHTML('<!doctype html><html><body>'.$content.'</body></html>', LIBXML_NOERROR | LIBXML_NOWARNING);
 	return new DOMXPath($document);
 }
-$css_standard = null;
+$css_by_revision = [];
 foreach (['VMwareMonitoring' => ['zabbix-module-wmvare-monitoring', 'vmware-monitoring'],
 	'MonitorDocker' => ['zabbix-module-docker', 'docker'],
-	'NetAppMonitoring' => ['zabbix-module-netapp-monitoring', 'netapp-monitoring']] as $namespace => [$repo, $prefix]) {
+	'NetAppMonitoring' => ['zabbix-module-netapp-monitoring', 'netapp-monitoring'],
+	'FortiGateOverview' => ['FortiGateOverview', 'forti-common']] as $namespace => [$repo, $prefix]) {
 	require_once $modules.'/'.$repo.'/includes/common/bootstrap.php';
 	$class = static fn(string $name): string => 'Modules\\'.$namespace.'\\Includes\\Common\\'.$name;
 	$summary = $class('Summary'); $breadcrumbs = $class('Breadcrumbs'); $badges = $class('ProblemBadges');
@@ -81,6 +82,11 @@ foreach (['VMwareMonitoring' => ['zabbix-module-wmvare-monitoring', 'vmware-moni
 	check($tree->query('//div[@id="summary"]//div[@id="live-count"]/a')->length === 1, 'Summary preserves live IDs and links');
 	check(str_contains((string) $card, '&lt;VMs&gt;'), 'Summary escapes labels');
 	check($tree->query('//div[@class="'.$prefix.'-statseg-aside"]//*[@role="progressbar"]')->length === 1, 'Summary includes shared aside');
+	if (method_exists($summary, 'grid')) {
+		$tree = xpath($summary::grid([$summary::card('Disk usage', '43.9%', ['footer' => '241 GB / 549 GB used'])]));
+		check($tree->query('//*[@class="'.$prefix.'-summary-grid"]')->length === 1, 'Detail summaries use responsive independent cards');
+		check($tree->query('//*[@class="'.$prefix.'-statseg-footer"]')->item(0)->textContent === '241 GB / 549 GB used', 'Card footer keeps related storage values together');
+	}
 	$nav = (string) $breadcrumbs::make([['label' => '<home>', 'url' => 'zabbix.php?action=list'], 'Parent', 'Current']);
 	$tree = xpath($nav);
 	check($tree->query('//nav[@aria-label="Breadcrumb"]//*[@aria-current="page"]')->length === 1, 'One current breadcrumb');
@@ -133,8 +139,9 @@ foreach (['VMwareMonitoring' => ['zabbix-module-wmvare-monitoring', 'vmware-moni
 	$rows = range(1, 21); $pager::paginate(2, $rows, ZBX_SORT_UP, new CUrl('zabbix.php?action=list'));
 	check(array_values($rows) === range(11, 20), 'Native pager trims actual caller data');
 	$css = str_replace($prefix, 'module', file_get_contents($modules.'/'.$repo.'/assets/css/components.css'));
-	check($css_standard === null || $css === $css_standard, 'Complete shared styling is identical across namespaces');
-	$css_standard = $css;
+	$revision = json_decode(file_get_contents($modules.'/'.$repo.'/common.lock.json'), true)['source_sha256'];
+	check(!isset($css_by_revision[$revision]) || $css === $css_by_revision[$revision], 'Identical pinned common revisions have identical shared styling');
+	$css_by_revision[$revision] = $css;
 }
 // Exercise the actual Docker view factory used by CPU and memory cells.
 preg_match('/^\$makeSparkline = static function.*?^};/ms',
@@ -177,4 +184,4 @@ foreach (['makeMountsSection' => 'Mounts', 'makeLabelsSection' => 'Labels'] as $
 	check($tree->query('//div[contains(@class,"docker-metric-group") and @data-module-detail-records="1"]/h5[text()="'.$label.'"]')->length === 1,
 		'Docker container '.$label.' uses the common record table card');
 }
-echo "Shared components passed $checks native Zabbix HTML/behavior checks across three isolated namespaces.\n";
+echo "Shared components passed $checks native Zabbix HTML/behavior checks across four isolated namespaces.\n";

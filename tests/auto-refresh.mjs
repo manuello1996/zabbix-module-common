@@ -7,7 +7,8 @@ const read = file => readFileSync(new URL(file, root), 'utf8');
 const modules = [
 	['zabbix-module-wmvare-monitoring', 'VMwareCommon'],
 	['zabbix-module-netapp-monitoring', 'NetAppCommon'],
-	['zabbix-module-docker', 'DockerCommon']
+	['zabbix-module-docker', 'DockerCommon'],
+	['FortiGateOverview', 'FortinetCommon']
 ];
 const settle = async () => { for (let index = 0; index < 20; index++) await Promise.resolve(); };
 const control = (dataset = {}) => ({dataset, checked: true, listeners: new Map(),

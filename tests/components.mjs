@@ -6,7 +6,8 @@ const root = new URL('../../', import.meta.url);
 const modules = [
 	['zabbix-module-wmvare-monitoring', 'VMwareCommon', 'vmware-monitoring'],
 	['zabbix-module-docker', 'DockerCommon', 'docker'],
-	['zabbix-module-netapp-monitoring', 'NetAppCommon', 'netapp-monitoring']
+	['zabbix-module-netapp-monitoring', 'NetAppCommon', 'netapp-monitoring'],
+	['FortiGateOverview', 'FortinetCommon', 'forti-common']
 ];
 class Element {
 	constructor(tag = 'div') {
@@ -101,7 +102,7 @@ for (const [directory, namespace, prefix] of modules) {
 	assert.equal(line().getAttribute('points').split(' ').length, 60);
 	assert.match(target.getAttribute('aria-label'), /Current: 119.0/, 'Sampling retains latest observation');
 	// Exercise the shipped adapters with the same percentage plotting policy.
-	if (namespace !== 'NetAppCommon') {
+	if (['VMwareCommon', 'DockerCommon'].includes(namespace)) {
 		const filename = namespace === 'VMwareCommon' ? 'vmware.monitoring.view.js.php' : 'docker.view.js.php';
 		const source = readFileSync(new URL(`${directory}/views/js/${filename}`, root), 'utf8')
 			.replace(/^<\?php[\s\S]*?\?>\s*<script>\s*/, '').replace(/<\/script>\s*$/, '')

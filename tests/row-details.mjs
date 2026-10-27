@@ -10,7 +10,8 @@ const source = name => read(name).replace(/^<\?php[\s\S]*?\?>\s*<script>\s*/, ''
 const modules = [
 	['zabbix-module-wmvare-monitoring', 'VMwareCommon', 'vmware-monitoring'],
 	['zabbix-module-docker', 'DockerCommon', 'docker'],
-	['zabbix-module-netapp-monitoring', 'NetAppCommon', 'netapp-monitoring']
+	['zabbix-module-netapp-monitoring', 'NetAppCommon', 'netapp-monitoring'],
+	['FortiGateOverview', 'FortinetCommon', 'forti-common']
 ];
 const panels = new Map(), listeners = [];
 const context = {window: {}, document: {
@@ -37,6 +38,7 @@ const controls = modules.map(([_directory, _namespace, prefix]) => {
 });
 context.window.VMwareCommon.RowDetails.bind(context.document);
 context.window.DockerCommon.RowDetails.bind(context.document);
+context.window.FortinetCommon.RowDetails.bind(context.document);
 // Load the actual NetApp bridge; it must also cover live-search replacements.
 vm.runInContext(read('zabbix-module-netapp-monitoring/assets/js/metrics.js'), context);
 for (const [index, [_directory, namespace, prefix]] of modules.entries()) {

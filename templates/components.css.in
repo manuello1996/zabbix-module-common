@@ -37,6 +37,16 @@ html[theme="dark-theme"], html[theme="hc-dark"] {
 .__CSS_PREFIX__-card-stopped .__CSS_PREFIX__-card-value,
 .__CSS_PREFIX__-card-unhealthy .__CSS_PREFIX__-card-value { color: var(--__CSS_PREFIX__-ui-critical); }
 
+/* Detail pages use independent cards so figures and units cannot be squeezed by charts. */
+.__CSS_PREFIX__-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 14px; margin: 0 0 16px; }
+.__CSS_PREFIX__-summary-grid > .__CSS_PREFIX__-statseg { min-width: 0; padding: 16px 18px; border: 1px solid var(--__CSS_PREFIX__-ui-border); border-radius: 8px; background: var(--__CSS_PREFIX__-ui-bg); }
+.__CSS_PREFIX__-summary-grid .__CSS_PREFIX__-statseg-figure { flex-wrap: wrap; align-items: center; gap: 10px; }
+.__CSS_PREFIX__-summary-grid .__CSS_PREFIX__-card-value { white-space: nowrap; font-size: 24px; line-height: 1.4; }
+.__CSS_PREFIX__-summary-grid .__CSS_PREFIX__-statseg-aside { flex: 0 0 100%; min-width: 0; margin: 0; }
+.__CSS_PREFIX__-summary-grid .__CSS_PREFIX__-statseg-aside > a { display: block; }
+.__CSS_PREFIX__-summary-grid .__CSS_PREFIX__-sparkline, .__CSS_PREFIX__-summary-grid .__CSS_PREFIX__-progress { width: 100%; }
+.__CSS_PREFIX__-statseg-footer { margin-top: 10px; color: var(--__CSS_PREFIX__-ui-muted); font-size: 12px; overflow-wrap: anywhere; }
+
 .__CSS_PREFIX__-breadcrumb { display: flex; align-items: center; flex-wrap: wrap; min-width: 0; min-height: 22px; margin: 0; padding: 0; font-size: 13px; line-height: 22px; color: var(--__CSS_PREFIX__-ui-text); }
 .__CSS_PREFIX__-breadcrumb a { color: var(--__CSS_PREFIX__-ui-muted); }
 .__CSS_PREFIX__-breadcrumb a:hover { color: var(--__CSS_PREFIX__-ui-accent); text-decoration: underline; }

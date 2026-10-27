@@ -6,7 +6,8 @@ const root = new URL('../../', import.meta.url);
 const modules = [
 	['zabbix-module-wmvare-monitoring', 'VMwareCommon', 'vmwareLocation'],
 	['zabbix-module-docker', 'DockerCommon', 'dockerLocation'],
-	['zabbix-module-netapp-monitoring', 'NetAppCommon', 'location']
+	['zabbix-module-netapp-monitoring', 'NetAppCommon', 'location'],
+	['FortiGateOverview', 'FortinetCommon', 'fortiLocation']
 ];
 const read = path => readFileSync(new URL(path, root), 'utf8');
 const script = path => read(path)
@@ -202,5 +203,5 @@ for (const [directory, namespace, dataPrefix] of modules) {
 const isolated = {window: {}};
 vm.createContext(isolated);
 for (const [directory] of modules) vm.runInContext(read(`${directory}/assets/js/common.js`), isolated);
-assert.equal(Object.keys(isolated.window).length, 3, 'All module runtimes coexist without overwriting each other');
-console.log('Shared controls passed in all three namespaces: debounce, IME, Enter, clear, Escape, collapse, tab races and Docker filters.');
+assert.equal(Object.keys(isolated.window).length, modules.length, 'All module runtimes coexist without overwriting each other');
+console.log('Shared controls passed in all four namespaces: debounce, IME, Enter, clear, Escape, collapse, tab races and Docker filters.');

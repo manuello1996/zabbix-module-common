@@ -1,7 +1,7 @@
 # Shared Zabbix module components
 
 The source repository for reusable components used by VMware Monitoring, Docker
-Monitoring and NetApp Monitoring. It is a developer dependency. Installed modules
+Monitoring, NetApp Monitoring and Fortinet Monitoring. It is a developer dependency. Installed modules
 contain their own generated copies and never load files from this repository.
 
 Shared components include complete reusable renderers and their styles and
@@ -13,21 +13,21 @@ different unit labels, missing-value policies, search delays and storage rules.
 | --- | --- | --- |
 | `templates/LocationHierarchy.php.in` | Macro parsing, stable keys, ancestors, tree sorting, pre-pagination aggregation and page headers | VMware and NetApp main inventories |
 | `templates/LocationRows.php.in` | Group buttons, counts, indentation and descendant row visibility | VMware and NetApp main inventories |
-| `templates/SearchControl.php.in` | Complete NetApp-standard search bar: label, native input, Clear button, hint and live status | VMware tabs, Docker containers/images/graphs, NetApp tabs |
-| `templates/common.js.in` | Debounced input events, IME, clear/Escape/submit and nested collapse presentation | All three modules |
-| `templates/Formatting.php.in` | Byte, duration and rate formatting | All three modules |
-| `templates/Summary.php.in` | Summary strips/cards, values, units, live IDs and optional charts/bars | All three modules, including Docker tab summaries |
-| `templates/Breadcrumbs.php.in` | Accessible breadcrumb navigation, separators and current page | All three detail views; VMware compatibility adapter |
-| `templates/ProblemBadges.php.in` | Severity ordering, native badge metadata, scoped problem links and unavailable/empty states | All three modules; Docker asynchronous problem loader |
+| `templates/SearchControl.php.in` | Complete NetApp-standard search bar: label, native input, Clear button, hint and live status | VMware tabs, Docker containers/images/graphs, NetApp and Fortinet tabs |
+| `templates/common.js.in` | Debounced input events, IME, clear/Escape/submit and nested collapse presentation | All four modules |
+| `templates/Formatting.php.in` | Byte, duration and rate formatting | All four modules |
+| `templates/Summary.php.in` | Summary strips/cards, values, units, live IDs and optional charts/bars | All four modules, including Docker tab summaries |
+| `templates/Breadcrumbs.php.in` | Accessible breadcrumb navigation, separators and current page | All four detail views; VMware compatibility adapter |
+| `templates/ProblemBadges.php.in` | Severity ordering, native badge metadata, scoped problem links and unavailable/empty states | All four modules; Docker asynchronous problem loader |
 | `templates/CapacityBar.php.in` | Bounded progress bars, accessibility, warning/critical/stale presentation | VMware capacity, Docker memory, NetApp capacity |
-| `templates/SortableHeader.php.in` | Native server sorting and accessible client controls | All three modules; VMware tabs and Docker containers/images |
-| `templates/Sparkline.php.in` | History placeholders and metadata | VMware hypervisors and Docker containers/summaries |
-| `templates/ItemActions.php.in` | Native Zabbix item-menu links with item IDs and return URLs | VMware and NetApp value adapters |
-| `templates/Pager.php.in` | Native pagination, total-based pagination, AJAX navigation and client controls | All three modules |
-| `templates/RowDetails.php.in` | NetApp-standard expand buttons, accessible detail rows, responsive metric groups and table wrappers | NetApp resources, VMware datastore/port details, Docker image/mount/Compose and container detail tables |
-| `templates/AutoRefresh.php.in` | VMware-standard opt-in checkbox, refresh interval bounds and accessible status | All three main inventory pages |
-| `templates/components.js.in` | Sparkline drawing, sorting, paging, badges, expandable rows and auto-refresh scheduling/status | All three modules |
-| `templates/components.css.in` | Complete shared component styles, light/dark themes and reduced motion | All three modules |
+| `templates/SortableHeader.php.in` | Native server sorting and accessible client controls | All four modules; VMware tabs and Docker containers/images |
+| `templates/Sparkline.php.in` | History placeholders and metadata | VMware hypervisors, Docker containers/summaries and Fortinet percentage metrics |
+| `templates/ItemActions.php.in` | Native Zabbix item-menu links, session configuration and parent-page handlers | All four modules; Fortinet dashboard values also use the JavaScript helper |
+| `templates/Pager.php.in` | Native pagination, total-based pagination, AJAX navigation and client controls | All four modules |
+| `templates/RowDetails.php.in` | NetApp-standard expand buttons, accessible detail rows, responsive metric groups and table wrappers | NetApp resources, VMware datastore/port details, Docker image/mount/Compose and container detail tables, Fortinet cluster/VDOM members |
+| `templates/AutoRefresh.php.in` | VMware-standard opt-in checkbox, refresh interval bounds and accessible status | All four main inventory pages |
+| `templates/components.js.in` | Sparkline drawing, sorting, paging, badges, expandable rows and auto-refresh scheduling/status | All four modules |
+| `templates/components.css.in` | Complete shared component styles, light/dark themes and reduced motion | All four modules |
 
 VMware keeps CProfile persistence, ordered save requests and pending-write replay.
 NetApp keeps its per-user browser-tab collapse state and permission-aware problem
@@ -42,6 +42,22 @@ Zabbix links/tags. `Breadcrumbs::make()` supplies separators automatically.
 `CapacityBar::render()` accepts thresholds, tone and stale status while callers
 retain their measurement labels and source-item links. `ItemActions::link()`
 receives a caller-built return URL so detail/tab/search context is preserved.
+
+Call `ItemActions::init($this)` once in a full PHP view to load Zabbix's dialog
+dependencies and initialize the shared handlers. Zabbix checks the signed-in
+user's host permissions, role, item type and retention when opening the menu.
+The common visibility policy hides Create trigger, Create dependent item and
+Create dependent discovery rule on links rendered by this component. Other native
+item menus keep their normal entries. Configuration and Execute now remain native
+server-authorized actions; execute requests include the current session's item
+CSRF token. Existing native page handlers are preserved. Successful edits restore
+the original URL and refresh the page; `ItemActions.install({onSuccess})` allows a
+module to refresh its own tab instead. Dashboard renderers can use
+`ItemActions.html(label, itemid)` and initialize with PHP's session-specific
+`ItemActions::options()`. Missing/invalid item IDs stay plain text. Derived values
+must not be assigned an arbitrary source item.
+
+`Summary::grid()` provides responsive independent cards for detail-page metrics. It keeps values and units on one line and puts charts below the figure. `Summary::card()` accepts a `footer` for related information such as used/total storage, avoiding separate cards and repeated usage panels. `strip()` keeps the compact inventory-count layout for existing callers.
 `SortableHeader::native()` delegates server headers to Zabbix; `render()` and
 the shared JavaScript helper support client sorting without changing comparators.
 `Pager` retains native `CPagerHelper` behavior and adds `forTotal()`, `ajax()` and
@@ -102,6 +118,7 @@ modules/
   zabbix-module-wmvare-monitoring/
   zabbix-module-docker/
   zabbix-module-netapp-monitoring/
+  FortiGateOverview/
 ```
 
 The VMware repository's existing spelling is intentional here.
@@ -215,11 +232,25 @@ node tests/interactions.mjs
 node tests/components.mjs
 node tests/row-details.mjs
 node tests/auto-refresh.mjs
+node tests/item-actions.mjs
 ```
+
+The item-menu JavaScript test accepts a Zabbix `js/menupopup.js` path as its
+optional first argument (default: the local `service-tags` checkout). On the local
+Zabbix 7.0 development server, `python -B tests/verify_item_actions.py` with
+`ZABBIX_PASSWORD` set checks all four modules through real signed-in sessions.
+It creates a temporary read-only user/group/role, checks menu restrictions and
+revoked host access, and removes those objects in a `finally` block. It requires
+the VMware, NetApp and Fortinet demos plus a Docker monitoring host; it never
+executes or changes monitoring items.
 
 Release integration tests use temporary Git repositories and a local bare remote.
 They exercise actual commits, tags and pushes without contacting GitHub.
 The interaction suite loads the generated assets and the actual module adapters,
 including Docker's lazy graph/image controls and VMware's tab search behavior.
-It checks all three namespaces together. Node is needed only for this test suite,
+It checks all four namespaces together. Node is needed only for this test suite,
 not for publishing or installing a module.
+
+## Fortinet widget integration
+
+Fortinet Monitoring uses the same bundled components on its dedicated pages while preserving its specialized dashboard widget and product collectors. Its `common.config.json` generates the isolated `FortinetCommon` namespace and `forti-common` CSS selectors. The release tool supports both module entrypoints (`Module.php`) and widget entrypoints (`Widget.php`), including collectors in `services/`. Fortinet development fixtures use native Zabbix trapper items and `history.push`; they stay outside shared runtime code and release archives.
